@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How a gravitational wave shifts pulsar pulses</title>
+<style>
+  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; background: #fafafa; color: #222; }
+  main { max-width: 1100px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 1.4em; margin: 0.3em 0; }
+  h2 { font-size: 1.1em; margin: 1.2em 0 0.3em; }
+  .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px 20px;
+              background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 10px 14px; }
+  .controls label { display: block; font-size: 0.9em; }
+  .controls input[type=range] { width: 100%; }
+  .val { font-weight: 600; font-variant-numeric: tabular-nums; }
+  canvas { display: block; width: 100%; background: #fff; border: 1px solid #ddd; border-radius: 6px; margin-top: 10px; }
+  .readout { margin-top: 8px; font-size: 0.95em; background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 8px 14px; }
+  .readout b { font-variant-numeric: tabular-nums; }
+  .cap { font-size: 0.85em; color: #555; margin: 2px 0 0; }
+  button { font-size: 0.95em; padding: 4px 12px; margin-right: 6px; }
+  .explain { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 4px 18px 12px; margin-top: 14px; line-height: 1.5; }
+  code { background: #f0f0f0; padding: 0 3px; border-radius: 3px; }
+</style>
+</head>
+<body>
+<main>
+<h1>How a gravitational wave shifts the arrival times of pulsar pulses</h1>
+<p class="cap">A plane gravitational wave (GW, plus polarization) crosses the line between Earth and a pulsar. Each pulse is delayed by the integral of the line-of-sight strain along its path. Units: c = 1, pulsar distance L = 1. The GW amplitude is enormously exaggerated so the effect is visible.</p>
+
+<div class="controls">
+  <div><label>GW propagation direction &alpha; (angle from the Earth&rarr;pulsar direction): <span class="val" id="alphaV"></span></label>
+       <input type="range" id="alpha" min="0" max="360" step="1" value="60"></div>
+  <div><label>GW wavelength &lambda; / L: <span class="val" id="lambdaV"></span></label>
+       <input type="range" id="lambda" min="-1.3" max="0.6" step="any" value="-0.35"></div>
+  <div><label>GW amplitude h&#8320; (exaggerated): <span class="val" id="h0V"></span></label>
+       <input type="range" id="h0" min="0.005" max="0.2" step="0.005" value="0.1"></div>
+  <div><label>Display exaggeration of delays (scene and tick marks only): <span class="val" id="exagV"></span></label>
+       <input type="range" id="exag" min="1" max="30" step="1" value="8"></div>
+  <div><label>Animation speed (L/c per second): <span class="val" id="speedV"></span></label>
+       <input type="range" id="speed" min="0.02" max="0.5" step="0.01" value="0.12"></div>
+  <div style="align-self:end"><button id="play">Pause</button><button id="integer">Set integer cycles along path</button></div>
+</div>
+
+<div class="readout" id="readout"></div>
+
+<canvas id="scene" height="230"></canvas>
+<p class="cap">Colour: line-of-sight strain s = &frac12; p<sup>i</sup>p<sup>j</sup>h<sub>ij</sub> (red: pulses slowed, blue: sped up). Thin lines: GW crests. Filled dots: pulses with the GW; open circles: where they would be without it. Pulses travel from the pulsar (right) to Earth (left).</p>
+
+<canvas id="ticks" height="120"></canvas>
+<p class="cap">Arrival times at Earth. Grey: arrival times without the GW (perfectly regular). Coloured: arrival times with the GW. The offset between them is the timing residual (multiplied by the display exaggeration).</p>
+
+<canvas id="path" height="190"></canvas>
+<p class="cap">For a pulse arriving at Earth right now: the strain it saw at each point of its path. The shaded area is its delay. Positive and negative lobes cancel except for the left-over fraction of a cycle.</p>
+
+<canvas id="hist" height="330"></canvas>
+<p class="cap">Top: fractional change of the observed pulse period, &delta;P/P = dR/dt. Bottom: timing residual R(t) = &int; &delta;P/P dt (true size, not exaggerated). Dots: delays of the individual pulses in the scene. Dashed: Earth term; dotted: pulsar term; solid: their sum.</p>
+
+<div class="explain">
+<h2>Why doesn't the integral average to zero if the wave is periodic?</h2>
+<p>There are two integrals here, and neither one has to vanish.</p>
+<p><b>1. The delay of one pulse is an integral along its path, not over a whole GW period.</b>
+A pulse emitted at the pulsar and received at time t has delay
+<code>R(t) = &int; s(t', x(t')) dt'</code> along its path. As it travels, it moves through the wave pattern. Because both the pulse and the wave move at c, the pulse passes through
+<code>N = L(1 + cos&alpha;)/&lambda;</code> wave cycles on the way, not L/&lambda;. The integral of a cosine over N cycles vanishes only when N is a whole number. Otherwise the left-over fraction of a cycle gives a net delay (see the path panel). Press "Set integer cycles along path": the residual becomes zero at all times. If the GW travels in the same direction as the pulses (&alpha; = 180&deg;), N = 0: the pulse rides one point of the wave, but there the line-of-sight strain is zero because GWs are transverse.</p>
+<p>Doing the integral gives two terms: <code>R(t) = F h&#8320;/(k(1+cos&alpha;)) [sin(kt) &minus; sin(k(t &minus; L(1+cos&alpha;)))]</code>, with F = &frac12;sin&sup2;&alpha;. The first term depends only on the wave at Earth (the <i>Earth term</i>), the second only on the wave at the pulsar when the pulse left (the <i>pulsar term</i>). For real pulsars L is thousands of light-years and &lambda; is a few light-years, so the two terms have unrelated phases and do not cancel.</p>
+<p><b>2. The residual is a time integral of the period change, and the integral of a periodic function is periodic, not zero.</b>
+The pulse period is shifted by <code>&delta;P/P = [s<sub>Earth</sub>(t) &minus; s<sub>pulsar</sub>(t &minus; L)]/(1 + cos&alpha;)</code>, which oscillates with zero mean. The timing residual is the running total of these period shifts, <code>R(t) = &int; &delta;P/P dt</code>. The integral of cos(kt) is sin(kt)/k: it returns to its starting value after each period, so the residual does not grow, but in between it is not zero. Its amplitude is about h/(2&pi;f), i.e. h times the GW period divided by 2&pi;. This is why PTAs measure arrival times (the integrated quantity): a strain of 10<sup>&minus;15</sup> at a period of a few years gives residuals of order 10 nanoseconds.</p>
+<p>In a real timing analysis the fitted timing model also absorbs a constant offset, a linear drift and a quadratic in time, so only the oscillating part of R(t) is detected.</p>
+</div>
+</main>
+<script src="physics.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
